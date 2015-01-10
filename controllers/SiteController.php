@@ -109,12 +109,49 @@ class SiteController extends Controller {
 
     public function actionSave()
     {
-        $result = [];
-        if(isset($_POST['date']) && !empty($_POST['date'])){
+        $errors = [];
+        if(isset($_POST['date']) && !empty($_POST['date']) && isset($_POST['time']) && !empty($_POST['time'])
+            && isset($_POST['Doctors']) && !empty($_POST['Doctors']) && isset($_POST['Patients']) && !empty($_POST['Patients'])){
 
+            $requestDoctor = Yii::$app->request->post('Doctors');
+            $doctorId = $requestDoctor['name'];
+            $doctor = Doctors::find()->where(['id' => $doctorId])->one();
+            if(empty($doctor)){
+                $errors[] = 'Врач не найден!';
+            }
+
+            if(count($errors) == 0){
+                $requestPatient = Yii::$app->request->post('Patients');
+                $patient = Patients::find()->where($requestPatient)->one();
+                if(empty($patient)) {
+                    $patient = new Patients();
+                    $patient->firstname = $requestPatient['firstname'];
+                    $patient->surname = $requestPatient['surname'];
+                    $patient->patronymic = $requestPatient['patronymic'];
+                    if( !($patient->save()) ) {
+                        $errors[] = 'Ошибка при сохранении данных пациента!';
+                    }
+                }
+            }
+
+            if(count($errors) == 0){
+                $requestDate = Yii::$app->request->post('date');
+                $time = Yii::$app->request->post('time');
+                $date = date('Y-m-d', strtotime($requestDate));
+                $schedule = new Schedule();
+                $schedule->doctor_id = $doctor->id;
+                $schedule->patient_id = $patient->id;
+                $schedule->date = $date;
+                $schedule->time = $time;
+                if( !($schedule->save()) ){
+                    $errors[] = 'Ошибка при сохранении данных в расписание приёма врачей!';
+                }
+            }
+        } else {
+            $errors[] = 'Введены не все данные!';
         }
 
-        return Json::encode($result);
+        return Json::encode($errors);
     }
 
 //    public function actionLogin() {

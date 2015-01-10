@@ -36,9 +36,4 @@ class Doctors extends ActiveRecord
     {
         return $this->surname . ' ' . $this->patronymic . ' ' . $this->firstname;
     }
-
-    public function getSpecSet ()
-    {
-        return array_merge( ['Любая' => ''], array_unique( ArrayHelper::map(Doctors::find()->where(['status' => Doctors::STATUS_ACTIVE])->all(), 'specialization', 'specialization') ) );
-    }
 }

@@ -20,14 +20,16 @@ use yii\web\JsExpression;
         <h1>Запись на приём к врачу</h1>
     </div>
 
-<?php
-    $form = ActiveForm::begin([
-        'id' => 'active-form',
-        'type' => ActiveForm::TYPE_VERTICAL
-    ])
-?>
-
     <div class="body-content">
+
+        <div id="alert-errors"></div>
+
+        <?php
+            $form = ActiveForm::begin([
+                'id' => 'active-form',
+                'type' => ActiveForm::TYPE_VERTICAL
+            ])
+        ?>
 
         <div class="row">
             <div class="col-lg-4 active-column">
@@ -132,8 +134,7 @@ use yii\web\JsExpression;
                             'id'=>'time',
                             'placeholder' => 'Выберите время визита к врачу...',
                             'title' => 'Вы не выбрали дату визита к врачу!',
-                            'disabled' => 'disabled',
-                            //'onchange' => 'addSubmit(this.value)'
+                            'disabled' => 'disabled'
                         ],
                         'pluginOptions' => [
                             'format' => 'hh:00',
@@ -161,21 +162,28 @@ use yii\web\JsExpression;
                 'type'=>'POST',
                 'url'=> Url::to('site/save'),
                 'success' => new JsExpression('function(data){
+                    showErrors(data);
                 }'),
             ],
-            'options' => ['type' => 'submit', 'id' => 'submitButton', 'disabled' => 'disabled', 'title' => 'Вы не заполнили всю форму!'],
+            'options' => [
+                'type' => 'submit',
+                'id' => 'submitButton',
+                'disabled' => 'disabled',
+                'title' => 'Вы не заполнили всю форму!'
+            ],
         ]
         );
+
         AjaxSubmitButton::end();
         ?>
 
         </div>
 
-    </div>
+        <?php
+            ActiveForm::end();
+        ?>
 
-<?php
-    ActiveForm::end();
-?>
+    </div>
 
 <?php
     $this->registerJs('
@@ -192,9 +200,9 @@ use yii\web\JsExpression;
         if(id.length > 0){
             $.get("'. Url::to('site/doctors') . '", {id: id}, function (data){
                 if(data.length > 0){
-                    sessionStorage.removeItem("dates");
+                    document.dates = null;
                     var doctors = $.parseJSON(data);
-                    $("#doctors").each( function (){ if(this.disabled != null) this.disabled = false; } );
+                    $("#doctors").each( function (){ this.disabled = false; } );
                     $("#doctors > option:not(:first-child)").remove();
                     $("#doctors").attr("title", "Выберите врача...");
                     for(var i = 0; i < doctors.length; i++){
@@ -206,10 +214,10 @@ use yii\web\JsExpression;
             }
             );
         } else {
-            sessionStorage.removeItem("dates");
+            document.dates = null;
             $("#doctors > option:not(:first-child)").remove();
             $("#doctors").attr("title", "Вы не выбрали специализацию врача!");
-            $("#doctors").each( function (){ this.disabled = true; } );
+            $("#doctors").each( function (){ this.disabled = "disabled"; } );
         }
     }
 
@@ -217,22 +225,22 @@ use yii\web\JsExpression;
         if(id.length > 0){
             $.get("'. Url::to('site/dates') . '", {id: id}, function (data){
                 if(data.length > 0){
-                    sessionStorage.setItem("dates", data);
-                    $("#dates").each( function (){ if(this.disabled != null) this.disabled = false; } );
+                    document.dates = data;
+                    $("#dates").each( function (){ this.disabled = false; } );
                     $("#dates").attr("title", "Выберите дату визита к врачу...");
                 }
             }
             );
         } else {
-            sessionStorage.removeItem("dates");
+            document.dates = null;
             $("#dates").attr("title", "Вы не выбрали врача!");
-            $("#dates").each( function (){ this.disabled = true; } );
+            $("#dates").each( function (){ this.disabled = "disabled"; } );
         }
     }
 
     function showDates(event) {
         $("div.datepicker-days td.reserved").removeClass("disabled reserved");
-        var dates = sessionStorage.getItem("dates");
+        var dates = document.dates;
         if(dates !== null){
             dates = $.parseJSON(dates);
             $("div.datepicker-days td.day:not(.disabled)").each(
@@ -255,16 +263,16 @@ use yii\web\JsExpression;
         if(date.length > 0){
             $.get("'. Url::to('site/times') . '", {date: date}, function (data){
                 if(data.length > 0){
-                    sessionStorage.setItem("times", data);
-                    $("#time").each( function (){ if(this.disabled != null) this.disabled = false; } );
+                    document.times = data;
+                    $("#time").each( function (){ this.disabled = false; } );
                     $("#time").attr("title", "Выберите время визита к врачу...");
                 }
             }
             );
         } else {
-            sessionStorage.removeItem("times");
+            document.times = null;
             $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
-            $("#time").each( function (){ this.disabled = true; } );
+            $("#time").each( function (){ this.disabled = "disabled"; } );
         }
     }
 
@@ -285,7 +293,7 @@ use yii\web\JsExpression;
         $("div.datetimepicker-hours span.active").removeClass("active");
         $("div.datetimepicker-hours thead tr,th").css("visibility", "hidden");
 
-        var times = sessionStorage.getItem("times");
+        var times = document.times;
         if(times !== null){
             times = $.parseJSON(times);
 
@@ -314,6 +322,18 @@ use yii\web\JsExpression;
         } else {
             $("#submitButton").each( function(){ this.disabled = "disabled"; } );
             $("#submitButton").attr("title", "Вы не заполнили всю форму!");
+        }
+    }
+
+    function showErrors(errors) {
+        errors = $.parseJSON(errors);
+        $("#alert-errors").empty();
+        if(errors.length > 0){
+            for(var i = 0; i < errors.length; i++){
+                $("#alert-errors").append( $("<div />", {class: "error"}).text(errors[i]) );
+            }
+        } else {
+            $("#alert-errors").append( $("<div />", {class: "success"}).text("Вы записаны на приём к врачу!") );
         }
     }
     ',
