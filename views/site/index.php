@@ -61,13 +61,18 @@ use yii\web\JsExpression;
                 ?>
 
             </div>
-            <div class="col-lg-4 not-active-column">
-                <h2>2. Выберите врача:</h2>
+            <div class="col-lg-4">
+                <h2 id="doctors-header" class="not-active-field">2. Выберите врача:</h2>
 
-                <?= $form->field($doctors, 'specialization')->dropDownList(
+                <?= $form->field($doctors, 'specialization', [
+                    'labelOptions' => [
+                        'id' => 'doc-spec-label',
+                        'class'=>'not-active-field'
+                        ]
+                    ] )->dropDownList(
                         ArrayHelper::map($doctorSpec, 'id', 'specialization'),
                         [
-                            'id'=>'doctor-spec', 
+                            'id'=>'doctor-spec',
                             'prompt' => 'Выберите специализацию врача...',
                             'title' => 'Выберите специализацию врача...',
                             'disabled' => 'disabled',
@@ -75,7 +80,12 @@ use yii\web\JsExpression;
                         ]
                     );
                 ?>
-                <?= $form->field($doctors, 'name')->dropDownList( 
+                <?= $form->field($doctors, 'name', [
+                    'labelOptions' => [
+                        'id' => 'doctors-label',
+                        'class'=>'not-active-field'
+                        ]
+                    ] )->dropDownList( 
                         [],
                         [
                             'id'=>'doctors',
@@ -88,15 +98,16 @@ use yii\web\JsExpression;
                 ?>
 
             </div>
-            <div class="col-lg-4 not-active-column">
-                <h2>3. Выберите дату визита:</h2>
+            <div class="col-lg-4">
+                <h2 id="date-header" class="not-active-field">3. Выберите дату визита:</h2>
 
                 <?php
-                    echo '<label class="control-label">Дата визита</label>';
+                    echo '<label id="date-label" class="control-label not-active-field">Дата визита</label>';
                     echo DatePicker::widget([
                             'name' => 'date',
                             'type' => DatePicker::TYPE_INPUT,
                             'value' => '',
+                            'readonly' => true,
                             'options' => [
                                 'id'=>'dates',
                                 'placeholder' => 'Выберите дату визита к врачу...',
@@ -105,11 +116,11 @@ use yii\web\JsExpression;
                                 'onchange' => 'selectTime(this.value)'
                             ],
                             'pluginOptions' => [
-                                'format' => 'dd-m-yyyy',
+                                'format' => 'yyyy-mm-dd',
                                 'autoclose' => true,
                                 'daysOfWeekDisabled' => [0,6],
-                                'startDate' => date('d-m-Y', strtotime("tomorrow")),
-                                'endDate' => date('d-m-Y', strtotime("+3 week"))
+                                'startDate' => date('Y-m-d', strtotime("tomorrow")),
+                                'endDate' => date('Y-m-d', strtotime("+3 week"))
                             ],
                             'pluginEvents' => [
                                 'show' => 'showDates'
@@ -120,16 +131,17 @@ use yii\web\JsExpression;
                 ?>
 
             </div>
-            <div class="col-lg-4 not-active-column">
-                <h2>4. Выберите время:</h2>
+            <div class="col-lg-4">
+                <h2 id="time-header" class="not-active-field">4. Выберите время:</h2>
 
                 <?php
-                    echo '<label class="control-label">Время визита</label>';
+                    echo '<label id="time-label" class="control-label not-active-field">Время визита</label>';
                     echo DateTimePicker::widget([
                         'name' => 'time',
                         'type' => DateTimePicker::TYPE_INPUT,
                         'value' => '',
                         'pickerButton' => false,
+                        'readonly' => true,
                         'options' => [
                             'id'=>'time',
                             'placeholder' => 'Выберите время визита к врачу...',
@@ -191,8 +203,10 @@ use yii\web\JsExpression;
         var values = $(".patient-info").map(function(){return this.value;});
         if($.inArray("", values) < 0) {
             $("#doctor-spec").each( function (){ this.disabled = false; } );
+            $("#doctors-header, #doc-spec-label").removeClass("not-active-field");
         } else {
             $("#doctor-spec").each( function (){ this.disabled = "disabled"; } );
+            $("#doctors-header, #doc-spec-label").addClass("not-active-field");
         }
     }
 
@@ -205,6 +219,7 @@ use yii\web\JsExpression;
                     $("#doctors").each( function (){ this.disabled = false; } );
                     $("#doctors > option:not(:first-child)").remove();
                     $("#doctors").attr("title", "Выберите врача...");
+                    $("#doctors-label").removeClass("not-active-field");
                     for(var i = 0; i < doctors.length; i++){
                         $("#doctors").append(
                             $("<option />", {value: doctors[i].id}).text(doctors[i].surname + " " + doctors[i].firstname + " " + doctors[i].patronymic)
@@ -218,6 +233,7 @@ use yii\web\JsExpression;
             $("#doctors > option:not(:first-child)").remove();
             $("#doctors").attr("title", "Вы не выбрали специализацию врача!");
             $("#doctors").each( function (){ this.disabled = "disabled"; } );
+            $("#doctors-label").addClass("not-active-field");
         }
     }
 
@@ -228,6 +244,7 @@ use yii\web\JsExpression;
                     document.dates = data;
                     $("#dates").each( function (){ this.disabled = false; } );
                     $("#dates").attr("title", "Выберите дату визита к врачу...");
+                    $("#date-header, #date-label").removeClass("not-active-field");
                 }
             }
             );
@@ -235,6 +252,7 @@ use yii\web\JsExpression;
             document.dates = null;
             $("#dates").attr("title", "Вы не выбрали врача!");
             $("#dates").each( function (){ this.disabled = "disabled"; } );
+            $("#date-header, #date-label").addClass("not-active-field");
         }
     }
 
@@ -266,6 +284,7 @@ use yii\web\JsExpression;
                     document.times = data;
                     $("#time").each( function (){ this.disabled = false; } );
                     $("#time").attr("title", "Выберите время визита к врачу...");
+                    $("#time-header, #time-label").removeClass("not-active-field");
                 }
             }
             );
@@ -273,6 +292,7 @@ use yii\web\JsExpression;
             document.times = null;
             $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
             $("#time").each( function (){ this.disabled = "disabled"; } );
+            $("#time-header, #time-label").addClass("not-active-field");
         }
     }
 
@@ -330,10 +350,10 @@ use yii\web\JsExpression;
         $("#alert-errors").empty();
         if(errors.length > 0){
             for(var i = 0; i < errors.length; i++){
-                $("#alert-errors").append( $("<div />", {class: "error"}).text(errors[i]) );
+                $("#alert-errors").append( $("<div />", {class: "error-summary"}).text(errors[i]) );
             }
         } else {
-            $("#alert-errors").append( $("<div />", {class: "success"}).text("Вы записаны на приём к врачу!") );
+            $("#alert-errors").append( $("<div />", {class: "success-summary"}).text("Вы записаны на приём к врачу!") );
         }
     }
     ',

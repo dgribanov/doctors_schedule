@@ -23,7 +23,14 @@ class Schedule extends ActiveRecord
             'doctor_id'      => 'Врач',
             'patient_id'     => 'Пациент',
             'date'           => 'Дата приёма',
-            'time_id'        => 'Время приёма'
+            'time'           => 'Время приёма'
+        ];
+    }
+
+    public function rules()
+    {
+        return [
+            [ ['doctor_id', 'patient_id', 'date', 'time'], 'required' ],
         ];
     }
 }

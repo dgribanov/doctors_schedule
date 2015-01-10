@@ -89,3 +89,15 @@ a.desc:after {
     padding: 10px 20px;
     margin: 0 0 15px 0;
 }
+
+.success-summary {
+    color: green;
+    background: #fdf7f7;
+    border-left: 3px solid green;
+    padding: 10px 20px;
+    margin: 0 0 15px 0;
+}
+
+.not-active-field {
+    opacity: 0.5;
+}

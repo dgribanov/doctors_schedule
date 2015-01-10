@@ -24,4 +24,11 @@ class Patients extends ActiveRecord
             'patronymic'     => 'Отчество',
         ];
     }
+
+    public function rules()
+    {
+        return [
+            [ ['firstname', 'surname', 'patronymic'], 'required' ]
+        ];
+    }
 }

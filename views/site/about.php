@@ -8,9 +8,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="site-about">
     <h1><?= Html::encode($this->title) ?></h1>
 
+    <p>Это тестовый сайт, реализующий формуляр записи на приём к врачу.</p>
+    <p>Создан на базе Yii 2 Framework с использованием jQuery, MySQL и AJAX.</p>
     <p>
-        This is the About page. You may modify the following file to customize its content:
+        Адрес проекта на GitHub: <a href="https://github.com/dgribanov/doctors_schedule">https://github.com/dgribanov/doctors_schedule</a>
     </p>
 
-    <code><?= __FILE__ ?></code>
 </div>

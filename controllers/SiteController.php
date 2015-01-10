@@ -100,7 +100,6 @@ class SiteController extends Controller {
         $result = [];
         if(isset($_GET['date']) && !empty($_GET['date'])){
             $date = $_GET['date'];
-            $date = date('Y-m-d', strtotime($date));
             $result = Schedule::find()->select('EXTRACT(HOUR FROM time) AS hour')->where(['date' => $date])->asArray()->all();
         }
 
@@ -135,9 +134,8 @@ class SiteController extends Controller {
             }
 
             if(count($errors) == 0){
-                $requestDate = Yii::$app->request->post('date');
+                $date = Yii::$app->request->post('date');
                 $time = Yii::$app->request->post('time');
-                $date = date('Y-m-d', strtotime($requestDate));
                 $schedule = new Schedule();
                 $schedule->doctor_id = $doctor->id;
                 $schedule->patient_id = $patient->id;
