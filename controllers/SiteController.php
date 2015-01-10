@@ -2,17 +2,22 @@
 
 namespace app\controllers;
 
+use app\models\ContactForm;
+use app\models\Doctors;
+use app\models\DoctorSpecialization;
+use app\models\LoginForm;
+use app\models\Schedule;
+use app\models\Patients;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 use Yii;
 use yii\filters\AccessControl;
-use yii\web\Controller;
 use yii\filters\VerbFilter;
-use app\models\LoginForm;
-use app\models\ContactForm;
+use yii\web\Controller;
 
-class SiteController extends Controller
-{
-    public function behaviors()
-    {
+class SiteController extends Controller {
+
+    public function behaviors() {
         return [
             'access' => [
                 'class' => AccessControl::className(),
@@ -34,8 +39,7 @@ class SiteController extends Controller
         ];
     }
 
-    public function actions()
-    {
+    public function actions() {
         return [
             'error' => [
                 'class' => 'yii\web\ErrorAction',
@@ -47,50 +51,108 @@ class SiteController extends Controller
         ];
     }
 
-    public function actionIndex()
-    {
-        return $this->render('index');
+    public function actionIndex() {
+        $doctorSpec = DoctorSpecialization::find()->where('id IN (SELECT DISTINCT specialization FROM doctors)')->all();
+        $schedule = new Schedule();
+        $doctors = new Doctors();
+        $patient = new Patients();
+
+        return $this->render('index', ['doctors' => $doctors, 'patient' => $patient, 'schedule' => $schedule, 'doctorSpec' => $doctorSpec]);
     }
 
-    public function actionLogin()
+    public function actionDoctors()
     {
-        if (!\Yii::$app->user->isGuest) {
-            return $this->goHome();
+        $result = [];
+        if(isset($_GET['id']) && !empty($_GET['id'])){
+            $id = $_GET['id'];
+            $result = Doctors::find()->select('id, firstname, surname, patronymic')->where(['status' => Doctors::STATUS_ACTIVE, 'specialization' => $id])->all();
         }
 
-        $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            return $this->goBack();
-        } else {
-            return $this->render('login', [
-                'model' => $model,
-            ]);
+        return Json::encode($result);
+    }
+
+    public function actionDates()
+    {
+        $result = [];
+        if(isset($_GET['id']) && !empty($_GET['id'])){
+            $id = $_GET['id'];
+            $dates = Schedule::find()->select('EXTRACT(DAY FROM date) AS date')->where(['doctor_id' => $id])->groupBy('date')->having('COUNT(*) < 18')->asArray()->all();
+            $reservedDates = Schedule::find()->select('EXTRACT(DAY FROM date) AS date')->where(['doctor_id' => $id])->groupBy('date')->having('COUNT(*) = 18')->asArray()->all();
+            if(!empty($dates)){
+                $result['dates'] = [];
+                foreach ($dates as $date) {
+                    array_push($result['dates'], $date['date']);
+                }
+            }
+            if(!empty($reservedDates)){
+                $result['reservedDates'] = [];
+                foreach ($reservedDates as $date) {
+                    array_push($result['reservedDates'], $date['date']);
+                }
+            }
         }
+
+        return Json::encode($result);
     }
 
-    public function actionLogout()
+    public function actionTimes()
     {
-        Yii::$app->user->logout();
-
-        return $this->goHome();
-    }
-
-    public function actionContact()
-    {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
-            Yii::$app->session->setFlash('contactFormSubmitted');
-
-            return $this->refresh();
-        } else {
-            return $this->render('contact', [
-                'model' => $model,
-            ]);
+        $result = [];
+        if(isset($_GET['date']) && !empty($_GET['date'])){
+            $date = $_GET['date'];
+            $date = date('Y-m-d', strtotime($date));
+            $result = Schedule::find()->select('EXTRACT(HOUR FROM time) AS hour')->where(['date' => $date])->asArray()->all();
         }
+
+        return Json::encode($result);
     }
 
-    public function actionAbout()
+    public function actionSave()
     {
+        $result = [];
+        if(isset($_POST['date']) && !empty($_POST['date'])){
+
+        }
+
+        return Json::encode($result);
+    }
+
+//    public function actionLogin() {
+//        if (!\Yii::$app->user->isGuest) {
+//            return $this->goHome();
+//        }
+//
+//        $model = new LoginForm();
+//        if ($model->load(Yii::$app->request->post()) && $model->login()) {
+//            return $this->goBack();
+//        } else {
+//            return $this->render('login', [
+//                        'model' => $model,
+//            ]);
+//        }
+//    }
+
+//    public function actionLogout() {
+//        Yii::$app->user->logout();
+//
+//        return $this->goHome();
+//    }
+//
+//    public function actionContact() {
+//        $model = new ContactForm();
+//        if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
+//            Yii::$app->session->setFlash('contactFormSubmitted');
+//
+//            return $this->refresh();
+//        } else {
+//            return $this->render('contact', [
+//                        'model' => $model,
+//            ]);
+//        }
+//    }
+
+    public function actionAbout() {
         return $this->render('about');
     }
+
 }
