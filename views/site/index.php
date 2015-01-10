@@ -130,6 +130,7 @@ use yii\web\JsExpression;
                     );
                 ?>
 
+                <p>Можно записаться на ближайшие три недели.</p>
             </div>
             <div class="col-lg-4">
                 <h2 id="time-header" class="not-active-field">4. Выберите время:</h2>
@@ -257,20 +258,23 @@ use yii\web\JsExpression;
     }
 
     function showDates(event) {
-        $("div.datepicker-days td.reserved").removeClass("disabled reserved");
+        $("div.datepicker-days td.active").removeClass("active");
+        $("div.datepicker-days td.reserved").removeClass("disabled reserved available partly-available");
         var dates = document.dates;
         if(dates !== null){
             dates = $.parseJSON(dates);
             $("div.datepicker-days td.day:not(.disabled)").each(
                 function(){
                     var day = $(this).text();
-                    $(this).css("background-color", "green");
+                    $(this).addClass("available");
+                    $(this).attr("title", "Зелёным цветом отмечены доступные для записи даты");
                     if($.inArray(day, dates.dates) >= 0){
-                        $(this).css("background-color", "yellow");
+                        $(this).removeClass("available").addClass("partly-available");
+                        $(this).attr("title", "Жёлтым цветом отмечены даты частично доступные для записи");
                     }
                     if($.inArray(day, dates.reservedDates) >= 0){
-                        $(this).addClass("disabled reserved");
-                        $(this).css("background-color", "red");
+                        $(this).removeClass("available").addClass("disabled reserved");
+                        $(this).attr("title", "Красным цветом отмечены даты недостуные для записи");
                     }
                 }
             );
@@ -297,7 +301,9 @@ use yii\web\JsExpression;
     }
 
     function showTime(event) {
-        $("div.datetimepicker-hours span.reserved").removeClass("disabled");
+        $("div.datetimepicker-hours span.active").removeClass("active");
+        $("div.datetimepicker-hours thead tr,th").css("visibility", "hidden");
+        $("div.datetimepicker-hours span.reserved").removeClass("disabled reserved available");
 
         var disabledHours = ["0:00", "1:00", "2:00", "3:00", "4:00", "5:00", "6:00", "7:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"];
         $("div.datetimepicker-hours span.hour").each(
@@ -309,9 +315,7 @@ use yii\web\JsExpression;
             }
         );
 
-        $("div.datetimepicker-hours span.hour:not(.disabled)").css("background-color", "green");
-        $("div.datetimepicker-hours span.active").removeClass("active");
-        $("div.datetimepicker-hours thead tr,th").css("visibility", "hidden");
+        $("div.datetimepicker-hours span.hour:not(.disabled)").addClass("available").attr("title", "Зелёным цветом отмечены доступное для записи время");
 
         var times = document.times;
         if(times !== null){
@@ -327,8 +331,8 @@ use yii\web\JsExpression;
                 function(){
                     var hour = $(this).text();
                     if($.inArray(hour, reservedHours) >= 0){
-                        $(this).addClass("disabled");
-                        $(this).css("background-color", "red");
+                        $(this).removeClass("available").addClass("disabled reserved");
+                        $(this).attr("title", "Красным цветом отмечено время недостуное для записи");
                     }
                 }
             );

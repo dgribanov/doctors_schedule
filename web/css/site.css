@@ -101,3 +101,15 @@ a.desc:after {
 .not-active-field {
     opacity: 0.5;
 }
+
+.available {
+    background-color: green;
+}
+
+.reserved {
+    background-color: red !important;
+}
+
+.partly-available {
+    background-color: yellow;
+}
