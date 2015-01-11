@@ -143,8 +143,8 @@ class SiteController extends Controller {
             if(isset($_POST['date']) && !empty($_POST['date']) && isset($_POST['time']) && !empty($_POST['time'])){
                 $requestDate = Yii::$app->request->post('date');
                 $requestTime = Yii::$app->request->post('time');
-                $date = mysql_escape_string($requestDate);
-                $time = mysql_escape_string($requestTime);
+                $date = addslashes($requestDate);
+                $time = addslashes($requestTime);
                 $schedule = new Schedule();
                 $schedule->doctor_id = $doctor->id;
                 $schedule->patient_id = $patient->id;
