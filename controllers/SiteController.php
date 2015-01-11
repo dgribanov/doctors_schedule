@@ -110,23 +110,25 @@ class SiteController extends Controller {
     {
         $errors = [];
         if(isset($_POST['date']) && !empty($_POST['date']) && isset($_POST['time']) && !empty($_POST['time'])
-            && isset($_POST['Doctors']) && !empty($_POST['Doctors']) && isset($_POST['Patients']) && !empty($_POST['Patients'])){
+            && isset($_POST['doctorId']) && !empty($_POST['doctorId']) && isset($_POST['firstname']) && !empty($_POST['firstname'])
+            && isset($_POST['surname']) && !empty($_POST['surname']) && isset($_POST['patronymic']) && !empty($_POST['patronymic'])){
 
-            $requestDoctor = Yii::$app->request->post('Doctors');
-            $doctorId = $requestDoctor['name'];
+            $doctorId = Yii::$app->request->post('doctorId');
             $doctor = Doctors::find()->where(['id' => $doctorId])->one();
             if(empty($doctor)){
                 $errors[] = 'Врач не найден!';
             }
 
             if(count($errors) == 0){
-                $requestPatient = Yii::$app->request->post('Patients');
-                $patient = Patients::find()->where($requestPatient)->one();
+                $firstname = Yii::$app->request->post('firstname');
+                $surname = Yii::$app->request->post('surname');
+                $patronymic = Yii::$app->request->post('patronymic');
+                $patient = Patients::find()->where(['firstname' => $firstname, 'surname' => $surname, 'patronymic' => $patronymic])->one();
                 if(empty($patient)) {
                     $patient = new Patients();
-                    $patient->firstname = $requestPatient['firstname'];
-                    $patient->surname = $requestPatient['surname'];
-                    $patient->patronymic = $requestPatient['patronymic'];
+                    $patient->firstname = $firstname;
+                    $patient->surname = $surname;
+                    $patient->patronymic = $patronumic;
                     if( !($patient->save()) ) {
                         $errors[] = 'Ошибка при сохранении данных пациента!';
                     }

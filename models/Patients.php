@@ -28,7 +28,8 @@ class Patients extends ActiveRecord
     public function rules()
     {
         return [
-            [ ['firstname', 'surname', 'patronymic'], 'required' ]
+            [ ['firstname', 'surname', 'patronymic'], 'required' ],
+            [ ['firstname', 'surname', 'patronymic'], 'match', 'pattern' => '/^\w*$/' ]
         ];
     }
 }

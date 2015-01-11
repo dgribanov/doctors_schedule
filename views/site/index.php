@@ -7,11 +7,11 @@ $this->title = 'Запись на приём к врачу';
 use yii\web\View;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
+use yii\bootstrap\Button;
 use kartik\widgets\ActiveForm;
 use kartik\widgets\DatePicker;
 use kartik\widgets\DateTimePicker;
-use demogorgorn\ajax\AjaxSubmitButton;
-use yii\web\JsExpression;
+use yii\helpers\Html;
 ?>
 
 <div class="site-index">
@@ -74,7 +74,7 @@ use yii\web\JsExpression;
                         [
                             'id'=>'doctor-spec',
                             'prompt' => 'Выберите специализацию врача...',
-                            'title' => 'Выберите специализацию врача...',
+                            'title' => 'Вы не завершили ввод личных данных!',
                             'disabled' => 'disabled',
                             'onchange' => 'selectDoctor(this.value)'
                         ]
@@ -167,27 +167,38 @@ use yii\web\JsExpression;
             </div>
         </div>
 
-        <div class="submitButton">
+        <div class="buttons-group">
 
-        <?php AjaxSubmitButton::begin([
-            'label' => 'Записаться на приём',
-            'ajaxOptions' => [
-                'type'=>'POST',
-                'url'=> Url::to('site/save'),
-                'success' => new JsExpression('function(data){
-                    showErrors(data);
-                }'),
-            ],
-            'options' => [
-                'type' => 'submit',
-                'id' => 'submitButton',
-                'disabled' => 'disabled',
-                'title' => 'Вы не заполнили всю форму!'
-            ],
-        ]
-        );
+        <?php
+        echo Html::a('Записаться на приём', '#', [
+                    'id' => 'submit-button', 
+                    'class' => 'btn btn-primary', 
+                    'onclick' => 'submitForm()', 
+                    'disabled' => 'disabled', 
+                    'title' => 'Вы не заполнили всю форму!'
+                ]
+            );
+//            echo Button::widget([
+//                'id' => 'submit-button',
+//                'label' => 'Записаться на приём',
+//                'options' => [
+//                    'class' => 'btn btn-primary',
+//                    'onclick' => 'submitForm()',
+//                    'disabled' => 'disabled',
+//                    'title' => 'Вы не заполнили всю форму!'
+//                ],
+//            ]);
+        ?>
 
-        AjaxSubmitButton::end();
+        <?php
+            echo Button::widget([
+                'id' => 'reset-button',
+                'label' => 'Очистить форму',
+                'options' => [
+                    'class' => 'btn btn-primary',
+                    'onclick' => 'resetForm()'
+                ],
+            ]);
         ?>
 
         </div>
@@ -204,9 +215,11 @@ use yii\web\JsExpression;
         var values = $(".patient-info").map(function(){return this.value;});
         if($.inArray("", values) < 0) {
             $("#doctor-spec").each( function (){ this.disabled = false; } );
+            $("#doctor-spec").attr("title", "Выберите специализацию врача...");
             $("#doctors-header, #doc-spec-label").removeClass("not-active-field");
         } else {
             $("#doctor-spec").each( function (){ this.disabled = "disabled"; } );
+            $("#doctor-spec").attr("title", "Вы не завершили ввод личных данных!");
             $("#doctors-header, #doc-spec-label").addClass("not-active-field");
         }
     }
@@ -341,11 +354,11 @@ use yii\web\JsExpression;
 
     function addSubmit(event) {
         if(event.target.value.length > 0){
-            $("#submitButton").each( function(){ this.disabled = false; } );
-            $("#submitButton").attr("title", "Записаться на приём к врачу...");
+            $("#submit-button").removeAttr("disabled");
+            $("#submit-button").attr("title", "Записаться на приём к врачу...");
         } else {
-            $("#submitButton").each( function(){ this.disabled = "disabled"; } );
-            $("#submitButton").attr("title", "Вы не заполнили всю форму!");
+            $("#submit-button").attr("disabled", "disabled");
+            $("#submit-button").attr("title", "Вы не заполнили всю форму!");
         }
     }
 
@@ -359,6 +372,33 @@ use yii\web\JsExpression;
         } else {
             $("#alert-errors").append( $("<div />", {class: "success-summary"}).text("Вы записаны на приём к врачу!") );
         }
+    }
+
+    function submitForm() {
+        var firstname = $("#patient-firstname").val();
+        var surname = $("#patient-surname").val();
+        var patronymic = $("#patient-patronymic").val();
+        var doctorId = $("#doctors").val();
+        var date = $("#dates").val();
+        var time = $("#time").val();
+        $.post("'. Url::to('site/save') . '",
+            {firstname: firstname, surname: surname, patronymic: patronymic, doctorId: doctorId, date: date, time: time},
+            function (data){
+                resetForm();
+                showErrors(data);
+            }
+        );
+    }
+
+    function resetForm() {
+        $("#active-form").trigger("reset");
+        $("#doctor-spec, #doctors, #dates, #time, #submit-button").attr("disabled", "disabled");
+        $("div.datetimepicker-hours span").removeClass("active disabled reserved available");
+        $("#doctors-header, #doc-spec-label, #doctors-label, #date-header, #date-label, #time-header, #time-label").addClass("not-active-field");
+        $("#doctor-spec").attr("title", "Вы не завершили ввод личных данных!");
+        $("#doctors").attr("title", "Вы не выбрали специализацию врача!");
+        $("#dates").attr("title", "Вы не выбрали врача!");
+        $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
     }
     ',
     View::POS_END
