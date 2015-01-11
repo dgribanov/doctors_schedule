@@ -415,7 +415,7 @@ use yii\helpers\Html;
             }
             $("div.datetimepicker-hours span").removeClass("active disabled reserved available");
         } else {
-            $("#active-form").trigger("reset");
+            $("#patient-surname, #patient-firstname, #patient-patronymic, #doctor-spec, #doctors, #dates, #time").val("");
             $("#doctor-spec, #doctors, #dates, #time, #submit-button").attr("disabled", "disabled");
             $("div.datetimepicker-hours span").removeClass("active disabled reserved available");
             $("#doctors-header, #doc-spec-label, #doctors-label, #date-header, #date-label, #time-header, #time-label").addClass("not-active-field");

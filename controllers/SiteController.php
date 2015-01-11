@@ -109,17 +109,18 @@ class SiteController extends Controller {
     public function actionSave()
     {
         $errors = [];
-        if(isset($_POST['date']) && !empty($_POST['date']) && isset($_POST['time']) && !empty($_POST['time'])
-            && isset($_POST['doctorId']) && !empty($_POST['doctorId']) && isset($_POST['firstname']) && !empty($_POST['firstname'])
-            && isset($_POST['surname']) && !empty($_POST['surname']) && isset($_POST['patronymic']) && !empty($_POST['patronymic'])){
-
+        if(isset($_POST['doctorId']) && !empty($_POST['doctorId'])){
             $doctorId = Yii::$app->request->post('doctorId');
             $doctor = Doctors::find()->where(['id' => $doctorId])->one();
             if(empty($doctor)){
                 $errors[] = 'Врач не найден!';
             }
+        } else {
+            $errors[] = 'Вы не выбрали врача!';
+        }
 
-            if(count($errors) == 0){
+        if(count($errors) == 0){
+            if(isset($_POST['firstname']) && !empty($_POST['firstname']) && isset($_POST['surname']) && !empty($_POST['surname']) && isset($_POST['patronymic']) && !empty($_POST['patronymic'])){
                 $firstname = Yii::$app->request->post('firstname');
                 $surname = Yii::$app->request->post('surname');
                 $patronymic = Yii::$app->request->post('patronymic');
@@ -128,16 +129,22 @@ class SiteController extends Controller {
                     $patient = new Patients();
                     $patient->firstname = $firstname;
                     $patient->surname = $surname;
-                    $patient->patronymic = $patronumic;
+                    $patient->patronymic = $patronymic;
                     if( !($patient->save()) ) {
                         $errors[] = 'Ошибка при сохранении данных пациента!';
                     }
                 }
+            } else {
+                $errors[] = 'Вы не ввели все данные о себе!';
             }
+        }
 
-            if(count($errors) == 0){
-                $date = Yii::$app->request->post('date');
-                $time = Yii::$app->request->post('time');
+        if(count($errors) == 0){
+            if(isset($_POST['date']) && !empty($_POST['date']) && isset($_POST['time']) && !empty($_POST['time'])){
+                $requestDate = Yii::$app->request->post('date');
+                $requestTime = Yii::$app->request->post('time');
+                $date = mysql_escape_string($requestDate);
+                $time = mysql_escape_string($requestTime);
                 $schedule = new Schedule();
                 $schedule->doctor_id = $doctor->id;
                 $schedule->patient_id = $patient->id;
@@ -146,9 +153,9 @@ class SiteController extends Controller {
                 if( !($schedule->save()) ){
                     $errors[] = 'Ошибка при сохранении данных в расписание приёма врачей!';
                 }
+            } else {
+                $errors[] = 'Вы не указали дату или время приёма!';
             }
-        } else {
-            $errors[] = 'Введены не все данные!';
         }
 
         return Json::encode($errors);
