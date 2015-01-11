@@ -173,7 +173,7 @@ use yii\helpers\Html;
         echo Html::a('Записаться на приём', '#', [
                     'id' => 'submit-button', 
                     'class' => 'btn btn-primary', 
-                    'onclick' => 'submitForm()', 
+                    'onclick' => 'submitForm(this.id)', 
                     'disabled' => 'disabled', 
                     'title' => 'Вы не заполнили всю форму!'
                 ]
@@ -186,7 +186,7 @@ use yii\helpers\Html;
                 'label' => 'Очистить форму',
                 'options' => [
                     'class' => 'btn btn-primary',
-                    'onclick' => 'resetForm()'
+                    'onclick' => 'resetForm(this.id)'
                 ],
             ]);
         ?>
@@ -351,7 +351,7 @@ use yii\helpers\Html;
         }
     }
 
-    function submitForm() {
+    function submitForm(elemId) {
         var firstname = $("#patient-firstname").val();
         var surname = $("#patient-surname").val();
         var patronymic = $("#patient-patronymic").val();
@@ -361,15 +361,17 @@ use yii\helpers\Html;
         $.post("'. Url::to('site/save') . '",
             {firstname: firstname, surname: surname, patronymic: patronymic, doctorId: doctorId, date: date, time: time},
             function (data){
-                resetForm();
+                resetForm(elemId);
                 showErrors(data);
             }
         );
     }
 
     function resetForm(elemId) {
-        if(elemId.length > 0){
             switch (elemId) {
+                case "submit-button":
+                case "reset-button":
+                    $("#patient-surname, #patient-firstname, #patient-patronymic").val("");
                 case "patient-surname":
                 case "patient-firstname":
                 case "patient-patronymic":
@@ -413,17 +415,8 @@ use yii\helpers\Html;
                     $("#submit-button").attr("title", "Вы не заполнили всю форму!");
                     break;
             }
+
             $("div.datetimepicker-hours span").removeClass("active disabled reserved available");
-        } else {
-            $("#patient-surname, #patient-firstname, #patient-patronymic, #doctor-spec, #doctors, #dates, #time").val("");
-            $("#doctor-spec, #doctors, #dates, #time, #submit-button").attr("disabled", "disabled");
-            $("div.datetimepicker-hours span").removeClass("active disabled reserved available");
-            $("#doctors-header, #doc-spec-label, #doctors-label, #date-header, #date-label, #time-header, #time-label").addClass("not-active-field");
-            $("#doctor-spec").attr("title", "Вы не завершили ввод личных данных!");
-            $("#doctors").attr("title", "Вы не выбрали специализацию врача!");
-            $("#dates").attr("title", "Вы не выбрали врача!");
-            $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
-        }
     }
     ',
     View::POS_END
