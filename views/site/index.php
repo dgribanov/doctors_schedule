@@ -39,7 +39,7 @@ use yii\helpers\Html;
                         [
                             'id'=>'patient-surname',
                             'class' => 'patient-info',
-                            'onchange' => 'selectDocSpec()'
+                            'onchange' => 'selectDocSpec(this.id)'
                         ]
                     );
                 ?>
@@ -47,7 +47,7 @@ use yii\helpers\Html;
                         [
                             'id'=>'patient-firstname',
                             'class' => 'patient-info',
-                            'onchange' => 'selectDocSpec()'
+                            'onchange' => 'selectDocSpec(this.id)'
                         ]
                     );
                 ?>
@@ -55,7 +55,7 @@ use yii\helpers\Html;
                         [
                             'id'=>'patient-patronymic',
                             'class' => 'patient-info',
-                            'onchange' => 'selectDocSpec()'
+                            'onchange' => 'selectDocSpec(this.id)'
                         ]
                     );
                 ?>
@@ -76,7 +76,7 @@ use yii\helpers\Html;
                             'prompt' => 'Выберите специализацию врача...',
                             'title' => 'Вы не завершили ввод личных данных!',
                             'disabled' => 'disabled',
-                            'onchange' => 'selectDoctor(this.value)'
+                            'onchange' => 'selectDoctor(this.value, this.id)'
                         ]
                     );
                 ?>
@@ -92,7 +92,7 @@ use yii\helpers\Html;
                             'prompt' => 'Выберите врача...',
                             'title' => 'Вы не выбрали специализацию врача!',
                             'disabled' => 'disabled',
-                            'onchange' => 'selectDate(this.value)'
+                            'onchange' => 'selectDate(this.value, this.id)'
                         ]
                     );
                 ?>
@@ -113,7 +113,7 @@ use yii\helpers\Html;
                                 'placeholder' => 'Выберите дату визита к врачу...',
                                 'title' => 'Вы не выбрали врача!',
                                 'disabled' => 'disabled',
-                                'onchange' => 'selectTime(this.value)'
+                                'onchange' => 'selectTime(this.value, this.id)'
                             ],
                             'pluginOptions' => [
                                 'format' => 'yyyy-mm-dd',
@@ -178,16 +178,6 @@ use yii\helpers\Html;
                     'title' => 'Вы не заполнили всю форму!'
                 ]
             );
-//            echo Button::widget([
-//                'id' => 'submit-button',
-//                'label' => 'Записаться на приём',
-//                'options' => [
-//                    'class' => 'btn btn-primary',
-//                    'onclick' => 'submitForm()',
-//                    'disabled' => 'disabled',
-//                    'title' => 'Вы не заполнили всю форму!'
-//                ],
-//            ]);
         ?>
 
         <?php
@@ -211,20 +201,18 @@ use yii\helpers\Html;
 
 <?php
     $this->registerJs('
-    function selectDocSpec() {
+    function selectDocSpec(elemId) {
         var values = $(".patient-info").map(function(){return this.value;});
         if($.inArray("", values) < 0) {
             $("#doctor-spec").each( function (){ this.disabled = false; } );
             $("#doctor-spec").attr("title", "Выберите специализацию врача...");
             $("#doctors-header, #doc-spec-label").removeClass("not-active-field");
         } else {
-            $("#doctor-spec").each( function (){ this.disabled = "disabled"; } );
-            $("#doctor-spec").attr("title", "Вы не завершили ввод личных данных!");
-            $("#doctors-header, #doc-spec-label").addClass("not-active-field");
+            resetForm(elemId);
         }
     }
 
-    function selectDoctor(id) {
+    function selectDoctor(id, elemId) {
         if(id.length > 0){
             $.get("'. Url::to('site/doctors') . '", {id: id}, function (data){
                 if(data.length > 0){
@@ -243,15 +231,11 @@ use yii\helpers\Html;
             }
             );
         } else {
-            document.dates = null;
-            $("#doctors > option:not(:first-child)").remove();
-            $("#doctors").attr("title", "Вы не выбрали специализацию врача!");
-            $("#doctors").each( function (){ this.disabled = "disabled"; } );
-            $("#doctors-label").addClass("not-active-field");
+            resetForm(elemId);
         }
     }
 
-    function selectDate(id) {
+    function selectDate(id, elemId) {
         if(id.length > 0){
             $.get("'. Url::to('site/dates') . '", {id: id}, function (data){
                 if(data.length > 0){
@@ -263,10 +247,7 @@ use yii\helpers\Html;
             }
             );
         } else {
-            document.dates = null;
-            $("#dates").attr("title", "Вы не выбрали врача!");
-            $("#dates").each( function (){ this.disabled = "disabled"; } );
-            $("#date-header, #date-label").addClass("not-active-field");
+            resetForm(elemId);
         }
     }
 
@@ -294,7 +275,7 @@ use yii\helpers\Html;
         }
     }
 
-    function selectTime(date) {
+    function selectTime(date, elemId) {
         if(date.length > 0){
             $.get("'. Url::to('site/times') . '", {date: date}, function (data){
                 if(data.length > 0){
@@ -306,17 +287,13 @@ use yii\helpers\Html;
             }
             );
         } else {
-            document.times = null;
-            $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
-            $("#time").each( function (){ this.disabled = "disabled"; } );
-            $("#time-header, #time-label").addClass("not-active-field");
+            resetForm(elemId);
         }
     }
 
     function showTime(event) {
-        $("div.datetimepicker-hours span.active").removeClass("active");
+        $("div.datetimepicker-hours span").removeClass("active disabled reserved available");
         $("div.datetimepicker-hours thead tr,th").css("visibility", "hidden");
-        $("div.datetimepicker-hours span.reserved").removeClass("disabled reserved available");
 
         var disabledHours = ["0:00", "1:00", "2:00", "3:00", "4:00", "5:00", "6:00", "7:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"];
         $("div.datetimepicker-hours span.hour").each(
@@ -390,15 +367,63 @@ use yii\helpers\Html;
         );
     }
 
-    function resetForm() {
-        $("#active-form").trigger("reset");
-        $("#doctor-spec, #doctors, #dates, #time, #submit-button").attr("disabled", "disabled");
-        $("div.datetimepicker-hours span").removeClass("active disabled reserved available");
-        $("#doctors-header, #doc-spec-label, #doctors-label, #date-header, #date-label, #time-header, #time-label").addClass("not-active-field");
-        $("#doctor-spec").attr("title", "Вы не завершили ввод личных данных!");
-        $("#doctors").attr("title", "Вы не выбрали специализацию врача!");
-        $("#dates").attr("title", "Вы не выбрали врача!");
-        $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
+    function resetForm(elemId) {
+        if(elemId.length > 0){
+            switch (elemId) {
+                case "patient-surname":
+                case "patient-firstname":
+                case "patient-patronymic":
+                    document.dates = document.times = null;
+                    $("#doctor-spec, #doctors, #dates, #time, #submit-button").attr("disabled", "disabled");
+                    $("#doctor-spec, #doctors, #dates, #time").val("");
+                    $("#doctors-header, #doc-spec-label, #doctors-label, #date-header, #date-label, #time-header, #time-label").addClass("not-active-field");
+                    $("#doctor-spec").attr("title", "Вы не завершили ввод личных данных!");
+                    $("#doctors").attr("title", "Вы не выбрали специализацию врача!");
+                    $("#dates").attr("title", "Вы не выбрали врача!");
+                    $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
+                    $("#submit-button").attr("title", "Вы не заполнили всю форму!");
+                    $("#doctors > option:not(:first-child)").remove();
+                    break;
+                case "doctor-spec":
+                    document.dates = document.times = null;
+                    $("#doctors, #dates, #time, #submit-button").attr("disabled", "disabled");
+                    $("#doctors, #dates, #time").val("");
+                    $("#doctors-label, #date-header, #date-label, #time-header, #time-label").addClass("not-active-field");
+                    $("#doctors").attr("title", "Вы не выбрали специализацию врача!");
+                    $("#dates").attr("title", "Вы не выбрали врача!");
+                    $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
+                    $("#submit-button").attr("title", "Вы не заполнили всю форму!");
+                    $("#doctors > option:not(:first-child)").remove();
+                    break;
+                case "doctors":
+                    document.dates = document.times = null;
+                    $("#dates, #time, #submit-button").attr("disabled", "disabled");
+                    $("#dates, #time").val("");
+                    $("#date-header, #date-label, #time-header, #time-label").addClass("not-active-field");
+                    $("#dates").attr("title", "Вы не выбрали врача!");
+                    $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
+                    $("#submit-button").attr("title", "Вы не заполнили всю форму!");
+                    break;
+                case "dates":
+                    document.times = null;
+                    $("#time, #submit-button").attr("disabled", "disabled");
+                    $("#time").val("");
+                    $("#time-header, #time-label").addClass("not-active-field");
+                    $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
+                    $("#submit-button").attr("title", "Вы не заполнили всю форму!");
+                    break;
+            }
+            $("div.datetimepicker-hours span").removeClass("active disabled reserved available");
+        } else {
+            $("#active-form").trigger("reset");
+            $("#doctor-spec, #doctors, #dates, #time, #submit-button").attr("disabled", "disabled");
+            $("div.datetimepicker-hours span").removeClass("active disabled reserved available");
+            $("#doctors-header, #doc-spec-label, #doctors-label, #date-header, #date-label, #time-header, #time-label").addClass("not-active-field");
+            $("#doctor-spec").attr("title", "Вы не завершили ввод личных данных!");
+            $("#doctors").attr("title", "Вы не выбрали специализацию врача!");
+            $("#dates").attr("title", "Вы не выбрали врача!");
+            $("#time").attr("title", "Вы не выбрали дату визита к врачу!");
+        }
     }
     ',
     View::POS_END
